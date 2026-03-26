@@ -44,7 +44,6 @@ export default function LinkedInUpload({ onDataParsed }: LinkedInUploadProps) {
   };
 
   const handleFileUpload = async (file: File) => {
-    // Validate file type
     if (file.type !== 'application/pdf') {
       setUploadStatus('error');
       setStatusMessage('Please upload a PDF file');
@@ -52,7 +51,6 @@ export default function LinkedInUpload({ onDataParsed }: LinkedInUploadProps) {
       return;
     }
 
-    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       setUploadStatus('error');
       setStatusMessage('File size must be less than 10MB');
@@ -83,7 +81,6 @@ export default function LinkedInUpload({ onDataParsed }: LinkedInUploadProps) {
         setStatusMessage('LinkedIn profile imported successfully!');
         onDataParsed(result.data);
         
-        // Auto-collapse after 2 seconds
         setTimeout(() => {
           setIsCollapsed(true);
         }, 2000);
@@ -98,7 +95,6 @@ export default function LinkedInUpload({ onDataParsed }: LinkedInUploadProps) {
       );
     } finally {
       setIsUploading(false);
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -141,10 +137,8 @@ export default function LinkedInUpload({ onDataParsed }: LinkedInUploadProps) {
         className="mb-6 relative"
       >
         <div className="bg-white/50 backdrop-blur-sm border border-gray-300 rounded-lg p-4 shadow-md hover:shadow-lg transition-all duration-200">
-          {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              {/* <FileText className="w-5 h-5 text-green-600" /> */}
               <h1 className="text-2xl font-bold mb-4 title-font">
                 Import from LinkedIn
               </h1>
@@ -164,7 +158,6 @@ export default function LinkedInUpload({ onDataParsed }: LinkedInUploadProps) {
             Download your LinkedIn profile as PDF and upload it here to auto-fill your resume
           </p>
 
-          {/* Upload Area */}
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -210,7 +203,6 @@ export default function LinkedInUpload({ onDataParsed }: LinkedInUploadProps) {
             </div>
           </div>
 
-          {/* Status Messages */}
           <AnimatePresence mode="wait">
             {uploadStatus === 'success' && (
               <motion.div
@@ -237,7 +229,6 @@ export default function LinkedInUpload({ onDataParsed }: LinkedInUploadProps) {
             )}
           </AnimatePresence>
 
-          {/* Instructions */}
           <div className="mt-4 p-3 bg-gray-50 border border-gray-300 rounded shadow-sm">
             <p className="text-xs text-gray-800 font-semibold mb-2 title-font">
               How to get your LinkedIn PDF:

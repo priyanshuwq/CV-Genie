@@ -28,13 +28,11 @@ export default function FAQ() {
 
   return (
     <div className="relative h-[830px] sm:h-[800px] overflow-hidden mask-image-top">
-      {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover opacity-50 backdrop-blur-sm"
         style={{ backgroundImage: "url('/resume-blue.jpg')" }}
       ></div>
 
-      {/* Text & Content */}
       <div className="relative z-10 pt-20 flex flex-col items-center justify-center px-4">
         <div className="flex items-center justify-center gap-3 mt-4 pt-10">
           <img
@@ -85,7 +83,6 @@ export default function FAQ() {
             </div>
           ))}
         </div>
-        {/* Get Help Button */}
 <div className="mt-10 flex justify-center">
   <button 
     onClick={() => window.open('https://github.com/komalverma22/cv-Genie/issues', '_blank')}
@@ -101,15 +98,6 @@ export default function FAQ() {
     <div className="hover-right absolute w-full h-full top-0 left-2/3"></div>
           <div className="bubbles-effect absolute inset-0 opacity-60 pointer-events-none"></div>
   </button>
-    {/* <button 
-          className="animated-hover-btn bg-green-600 text-white px-6 py-3 rounded font-bold text-lg relative overflow-hidden shadow-lg"
-          
-        >
-          <div className="hover-left absolute w-full h-full top-0 right-2/3"></div>
-          Get Help
-          <div className="hover-right absolute w-full h-full top-0 left-2/3"></div>
-          <div className="bubbles-effect absolute inset-0 opacity-60 pointer-events-none"></div>
-        </button> */}
 </div>
 
 

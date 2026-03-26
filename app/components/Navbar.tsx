@@ -4,7 +4,6 @@ import { signOut, useSession } from "next-auth/react"
 import { useRouter, usePathname } from "next/navigation"
 import { useState } from "react"
 
-// Extend the Window interface to include downloadResume
 declare global {
   interface Window {
     downloadResume?: () => Promise<void>
@@ -22,15 +21,12 @@ export default function Navbar() {
     if (status === "loading") return
 
     if (!session) {
-      // User not signed in - redirect to sign in with download flag
       localStorage.setItem("shouldDownload", "true")
       router.push("/signin")
       return
     }
 
-    // User is signed in
     if (pathname === "/create-resume") {
-      // Already on create-resume page - try direct download
       if (typeof window !== "undefined" && window.downloadResume) {
         setIsDownloading(true)
         try {
@@ -41,12 +37,10 @@ export default function Navbar() {
           setIsDownloading(false)
         }
       } else {
-        // Download function not available yet - set flag and refresh
         localStorage.setItem("shouldDownload", "true")
         window.location.reload()
       }
     } else {
-      // Not on create-resume page - navigate there with download flag
       localStorage.setItem("shouldDownload", "true")
       router.push("/create-resume")
     }
@@ -63,7 +57,6 @@ export default function Navbar() {
   return (
     <>
       <div className="fixed top-0 left-1/2 -translate-x-1/2 z-10 w-[90%] max-w-5xl px-2 sm:px-3 py-2 sm:py-3 rounded-sm shadow-md flex justify-between items-center my-2 sm:my-4 border border-black/30 backdrop-blur-sm">
-        {/* Logo */}
         <div className="hidden sm:flex items-center">
           <Link href="/" className="flex items-center">
             <img 
@@ -74,7 +67,6 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-6 lg:space-x-8 text-lg font-medium title-font">
           <Link 
             href="/" 
@@ -112,9 +104,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Menu Button & Download Button Container */}
         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end">
-          {/* Download Button */}
           <button
             onClick={handleDownloadClick}
             disabled={isDownloading || status === "loading"}
@@ -155,7 +145,6 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={toggleMobileMenu}
             className="md:hidden flex flex-col justify-center items-center w-8 h-8 p-1 rounded-md hover:bg-gray-100 transition-colors duration-200"
@@ -168,7 +157,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div 
           className="fixed inset-0 z-40 md:hidden"
@@ -176,11 +164,9 @@ export default function Navbar() {
         />
       )}
 
-      {/* Mobile Menu */}
       <div className={`fixed top-0 right-0 h-auto w-64 backdrop-blur-lg m-3 mr-4 mt-2 rounded-lg border border-black/30 shadow-lg z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
         isMobileMenuOpen ? 'translate-x-0' : 'translate-x-70'
       }`}>
-        {/* Mobile Menu Header */}
         <div className="flex justify-between items-center p-4 border-b border-black/30 shadow-lg">
           <div>
             <img 
@@ -194,7 +180,6 @@ export default function Navbar() {
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors duration-200"
             aria-label="Close mobile menu"
           >
-            {/* cross button */}
             <div className="relative w-5 h-5">
               <div className="absolute w-5 h-0.5 bg-black rotate-45 top-1/2 left-0 transform -translate-y-1/2"></div>
               <div className="absolute w-5 h-0.5 bg-black -rotate-45 top-1/2 left-0 transform -translate-y-1/2"></div>
@@ -202,7 +187,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Menu Items */}
         <nav className="py-4">
           <Link 
             href="/" 

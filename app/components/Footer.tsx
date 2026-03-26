@@ -4,11 +4,9 @@ import React from "react";
 import Link from "next/link";
 import {  Twitter, Linkedin, Github } from "lucide-react";
 
-// Chnage this with your own data
 const defaultNavigationLinks = [
   { href: "/", label: "Home" },
   { href: "/create-resume", label: "Create" },
-  // { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -28,7 +26,6 @@ const FooterThird = ({
     <footer className="bg-white/70 text-gray-800">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-6 sm:space-y-0">
-          {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
               <img 
@@ -38,7 +35,6 @@ const FooterThird = ({
               />
             </Link>
           </div>
-          {/* Navigation Links */}
           <div className="flex flex-wrap justify-center space-x-6 text-md">
             {navigationLinks.map((link) => (
               <Link key={link.href} href={link.href} className="hover:text-gray-600">
@@ -46,7 +42,6 @@ const FooterThird = ({
               </Link>
             ))}
           </div>
-          {/* Social Icons */}
           <div className="flex flex-wrap justify-center space-x-4 text-gray-700">
             {socialLinks.map((social) => (
               <a

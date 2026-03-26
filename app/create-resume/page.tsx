@@ -5,7 +5,6 @@ import { useState, useRef, useEffect } from "react";
 import jsPDF from "jspdf";
 import { saveToLocalStorage } from "../utils/localStorageHelper";
 
-// Left components
 import PersonalInfo from "../components/ui/leftSide/PersonalInfo.create-resume";
 import SkillLeft from "../components/ui/leftSide/Skills.left";
 import EducationLeft from "../components/ui/leftSide/Education.Left";
@@ -14,7 +13,6 @@ import ProjectsLeft from "../components/ui/leftSide/Project.Left";
 import AcheivementLeft from "../components/ui/leftSide/Acheivements.Left";
 import LinkedInUpload from "../components/ui/leftSide/LinkedInUpload";
 
-// Right components
 import PersonalInfoRight from "../components/ui/rightSide/PersonalInfo.Right";
 import SkillRight from "../components/ui/rightSide/SkillRight";
 import EducationRight from "../components/ui/rightSide/EducationRight";
@@ -69,7 +67,6 @@ const loading = status === "loading";
     });
   }, [info, skills, education, experience, projects, achievement]);
 
-  // Expose download function to window for Navbar access
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.downloadResume = handleDownloadPDF;
@@ -81,7 +78,6 @@ const loading = status === "loading";
     };
   }, []);
 
-  // Handler for LinkedIn data import
   const handleLinkedInDataParsed = (parsedData: any) => {
     if (parsedData.info) {
       setInfo(parsedData.info);
@@ -104,13 +100,11 @@ const loading = status === "loading";
 
  return (
   <div className="relative w-screen h-screen overflow-y-auto">
-    {/* Blur Overlay when not signed in */}
     {(!bypassAuth && !session && !loading) && (
      <div className="absolute z-50 inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
   <div className="w-[90%] max-w-md rounded-xl bg-white/20 backdrop-filter backdrop-blur-lg border border-white/30 p-8 shadow-2xl text-center">
     <h2 className="text-2xl font-semibold text-black/80 drop-shadow mb-4"
      style={{
-    // textShadow: '1px 1px 5px rgba(17, 24, 39, 0.3)',
      fontFamily: "var(--font-quicksand)" 
   }}
     >
@@ -126,7 +120,6 @@ const loading = status === "loading";
 
     )}
 
-    {/* Actual Background & Content */}
     <div
       className={`absolute inset-0 bg-cover bg-center transition-all duration-300 ${
         !bypassAuth && !session && !loading ? 'opacity-40 blur-sm' : 'opacity-100'
@@ -135,7 +128,6 @@ const loading = status === "loading";
     />
 
     <div className="relative z-10 flex flex-col md:flex-row w-full gap-3 p-3 pt-6 mt-13 md:mt-20">
-      {/* Left Panel - Input */}
       <div className="w-full md:w-1/2 max-h-[83vh] overflow-y-auto p-4 border border-gray-400 shadow rounded-lg bg-white/90 scrollbar-hide">
         <LinkedInUpload onDataParsed={handleLinkedInDataParsed} />
         <PersonalInfo info={info} setInfo={setInfo} />
@@ -146,7 +138,6 @@ const loading = status === "loading";
         <AcheivementLeft achievement={achievement} setAchievement={setAchievement} />
       </div>
 
-      {/* Right Panel - Preview */}
       <div className="w-full md:w-1/2 max-h-[83vh] overflow-y-auto border shadow rounded-lg bg-white/90 scrollbar-hide">
         <div
           ref={resumeRef}

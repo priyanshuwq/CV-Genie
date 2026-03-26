@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import PDFParser from 'pdf2json';
 
-// Debug mode - set to true for detailed logging
 const DEBUG_MODE = true;
-
-// Type definitions matching the resume data structure
 interface ParsedData {
   info: {
     name: string;
     location: string;
     email: string;
-    phone?: string; // Added phone field
+    phone?: string;
     github: string;
     linkedin: string;
     twitter: string;
-    website?: string; // Added website field
+    website?: string;
     summary: string;
   };
   skills: Array<{ category: string; items: string }>;
@@ -39,7 +36,6 @@ interface ParsedData {
   }>;
 }
 
-// Helper function to log in debug mode
 function debugLog(label: string, data: any) {
   if (DEBUG_MODE) {
     console.log(`\n=== ${label} ===`);
@@ -47,7 +43,6 @@ function debugLog(label: string, data: any) {
   }
 }
 
-// Helper function to extract text from PDF using pdf2json
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   return new Promise((resolve, reject) => {
     const pdfParser = new PDFParser();
@@ -58,7 +53,6 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
 
     pdfParser.on('pdfParser_dataReady', (pdfData: any) => {
       try {
-        // Extract text from all pages with better formatting preservation
         let text = '';
         if (pdfData.Pages) {
           for (let pageIndex = 0; pageIndex < pdfData.Pages.length; pageIndex++) {
@@ -66,7 +60,7 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
             debugLog(`Processing Page ${pageIndex + 1}`, `Total pages: ${pdfData.Pages.length}`);
             
             if (page.Texts) {
-              // Sort text items by Y position then X position for better line detection
+              // Sort by Y position then X for proper line detection
               const sortedTexts = [...page.Texts].sort((a, b) => {
                 if (Math.abs(a.y - b.y) < 0.5) {
                   return a.x - b.x;
@@ -76,7 +70,6 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
               
               let lastY = -1;
               for (const textItem of sortedTexts) {
-                // Add newline if Y position changed significantly (new line)
                 if (lastY !== -1 && Math.abs(textItem.y - lastY) > 0.5) {
                   text += '\n';
                 }
@@ -94,14 +87,12 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
               text += '\n';
             }
             
-            // Add page separator for multi-page PDFs
             if (pageIndex < pdfData.Pages.length - 1) {
               text += '\n--- PAGE BREAK ---\n';
             }
           }
         }
         
-        // Clean up extra spaces while preserving line breaks
         text = text.replace(/[ \t]+/g, ' ').replace(/\n\s*\n\s*\n/g, '\n\n');
         
         resolve(text);
@@ -110,14 +101,11 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
       }
     });
 
-    // Parse the PDF buffer
     pdfParser.parseBuffer(buffer);
   });
 }
 
-// Helper function to extract email from text
 function extractEmail(text: string): string {
-  // Multiple email patterns for better detection
   const emailPatterns = [
     /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
     /\b[\w.+-]+@[\w.-]+\.[\w.-]+\b/g,
@@ -126,7 +114,6 @@ function extractEmail(text: string): string {
   for (const pattern of emailPatterns) {
     const matches = text.match(pattern);
     if (matches && matches.length > 0) {
-      // Return the first valid email
       const validEmail = matches[0].toLowerCase();
       debugLog('Email Found', validEmail);
       return validEmail;
@@ -137,7 +124,6 @@ function extractEmail(text: string): string {
   return '';
 }
 
-// Helper function to extract phone number
 function extractPhone(text: string): string {
   const phonePatterns = [
     /\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g,
@@ -149,7 +135,6 @@ function extractPhone(text: string): string {
   for (const pattern of phonePatterns) {
     const matches = text.match(pattern);
     if (matches && matches.length > 0) {
-      // Filter out years (4 digits only)
       const validPhone = matches.find(m => m.replace(/\D/g, '').length >= 10);
       if (validPhone) {
         debugLog('Phone Found', validPhone);
@@ -162,7 +147,6 @@ function extractPhone(text: string): string {
   return '';
 }
 
-// Helper function to extract website/portfolio URLs
 function extractWebsite(text: string): string {
   const websitePatterns = [
     /(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9-]+\.[a-zA-Z0-9.-]+(?:\/[^\s]*)?)/g,
@@ -171,7 +155,6 @@ function extractWebsite(text: string): string {
   for (const pattern of websitePatterns) {
     const matches = text.match(pattern);
     if (matches && matches.length > 0) {
-      // Filter out LinkedIn, email domains, and common false positives
       const validWebsite = matches.find(m => 
         !m.includes('linkedin.com') && 
         !m.includes('github.com') &&
@@ -191,7 +174,6 @@ function extractWebsite(text: string): string {
   return '';
 }
 
-// Helper function to extract GitHub URL
 function extractGitHub(text: string): string {
   const githubPatterns = [
     /(?:https?:\/\/)?(?:www\.)?github\.com\/([a-zA-Z0-9-]+)/gi,
@@ -217,7 +199,6 @@ function extractGitHub(text: string): string {
   return '';
 }
 
-// Helper function to extract Twitter handle
 function extractTwitter(text: string): string {
   const twitterPatterns = [
     /(?:https?:\/\/)?(?:www\.)?(?:twitter|x)\.com\/([a-zA-Z0-9_]+)/gi,
@@ -249,7 +230,6 @@ function extractTwitter(text: string): string {
   return '';
 }
 
-// Helper function to extract LinkedIn URL
 function extractLinkedInUrl(text: string): string {
   const linkedinPatterns = [
     /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/([a-zA-Z0-9-]+)/gi,
@@ -275,28 +255,21 @@ function extractLinkedInUrl(text: string): string {
   return '';
 }
 
-// Helper function to extract name (usually first significant text)
 function extractName(text: string): string {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l);
   
   debugLog('Name Extraction - First 15 lines', lines.slice(0, 15));
   
-  // More lenient name patterns
   const namePatterns = [
-    // Standard capitalized name (2-4 words)
     /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})$/,
-    // Name with periods (e.g., "John R. Smith")
     /^([A-Z][a-z]+(?:\s+[A-Z]\.?\s*){0,2}[A-Z][a-z]+)$/,
-    // Name with hyphens or apostrophes
     /^([A-Z][a-z]+(?:[-'][A-Z][a-z]+)?(?:\s+[A-Z][a-z]+(?:[-'][A-Z][a-z]+)?){1,2})$/,
-    // Capitalized words (more lenient)
     /^([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){1,3})$/,
   ];
   
   for (let i = 0; i < Math.min(15, lines.length); i++) {
     const line = lines[i].trim();
     
-    // Skip obvious non-names
     if (
       line.length < 3 ||
       line.length > 80 ||
@@ -312,7 +285,6 @@ function extractName(text: string): string {
       continue;
     }
     
-    // Try each name pattern
     for (const pattern of namePatterns) {
       if (pattern.test(line)) {
         const words = line.split(/\s+/);
@@ -324,7 +296,6 @@ function extractName(text: string): string {
     }
   }
   
-  // Fallback: Look for any line with 2-4 capitalized words
   for (let i = 0; i < Math.min(10, lines.length); i++) {
     const line = lines[i].trim();
     const words = line.split(/\s+/);
@@ -347,18 +318,12 @@ function extractName(text: string): string {
   return '';
 }
 
-// Helper function to extract location
 function extractLocation(text: string): string {
   const locationPatterns = [
-    // US: City, State ZIP
     /([A-Z][a-zA-Z\s]+,\s*[A-Z]{2}\s+\d{5})/,
-    // US: City, State
     /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?,\s*[A-Z]{2}(?:\s|,|$))/,
-    // International: City, Country
     /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?,\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?(?:\s|,|$))/,
-    // Area/Region
     /(?:Location|Area|Region):\s*([A-Za-z\s,]+?)(?:\n|$)/i,
-    // Greater Area pattern (LinkedIn specific)
     /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:Area|Metropolitan|Metro|Region))/,
   ];
   
@@ -366,7 +331,6 @@ function extractLocation(text: string): string {
     const match = text.match(pattern);
     if (match && match[1]) {
       const location = match[1].trim();
-      // Validate it's not too long and contains reasonable characters
       if (location.length > 3 && location.length < 100 && !location.match(/\d{4,}/)) {
         debugLog('Location Found', location);
         return location;
@@ -374,19 +338,17 @@ function extractLocation(text: string): string {
     }
   }
   
-  // Fallback: Look for pattern after name/contact info (first 500 chars)
   const topSection = text.substring(0, 500);
   const lines = topSection.split('\n').map(l => l.trim()).filter(l => l);
   
   for (const line of lines) {
-    // Look for lines with comma pattern (City, State/Country)
     if (
       line.includes(',') &&
       line.length > 5 &&
       line.length < 60 &&
       !line.includes('@') &&
       !line.includes('http') &&
-      !line.match(/\d{4}/) && // No years
+      !line.match(/\d{4}/) &&
       /^[A-Z]/.test(line)
     ) {
       debugLog('Location Found (Fallback)', line);
@@ -398,14 +360,10 @@ function extractLocation(text: string): string {
   return '';
 }
 
-// Parse summary/about section
 function extractSummary(text: string): string {
   const summaryPatterns = [
-    // Standard section headers
     /(?:Summary|About|Profile|Professional Summary|Executive Summary|Overview)\s*[:\n]\s*([\s\S]{30,1000}?)(?=\n\s*(?:Experience|Education|Skills|Projects|Certifications|Employment|Work History|Professional Experience))/i,
-    // No header, but text block before Experience
     /^([\s\S]{100,1000}?)(?=\n\s*(?:Experience|Education|Skills|Employment|Work History))/i,
-    // After contact info, before sections
     /(?:@[a-zA-Z0-9.-]+|linkedin\.com\/in\/[a-zA-Z0-9-]+)\s*\n\s*([\s\S]{50,1000}?)(?=\n\s*(?:Experience|Education|Skills))/i,
   ];
 
@@ -417,13 +375,11 @@ function extractSummary(text: string): string {
         .replace(/\n+/g, ' ')
         .substring(0, 1000);
       
-      // Clean up common artifacts
       summary = summary
         .replace(/^[-•*]\s*/, '')
         .replace(/\s*\.{3,}\s*$/, '')
         .trim();
       
-      // Validate it's actual summary text (not just names or single words)
       if (summary.length > 30 && summary.split(/\s+/).length > 10) {
         debugLog('Summary Found', summary.substring(0, 200) + '...');
         return summary;
@@ -435,7 +391,6 @@ function extractSummary(text: string): string {
   return '';
 }
 
-// Parse experience section
 function extractExperience(text: string): Array<{
   role: string;
   organization: string;
@@ -451,7 +406,6 @@ function extractExperience(text: string): Array<{
     points: string[];
   }> = [];
 
-  // Multiple patterns to catch different LinkedIn formats
   const expPatterns = [
     /(?:Experience|Work Experience|Employment History|Professional Experience)\s+([\s\S]*?)(?=\n\s*(?:Education|Skills|Projects|Certifications|Languages|Volunteer|Licenses|$))/i,
     /(?:Work History)\s+([\s\S]*?)(?=\n\s*(?:Education|Skills|Projects|$))/i,
@@ -475,19 +429,16 @@ function extractExperience(text: string): Array<{
   
   const lines = expSection.split('\n').map(l => l.trim()).filter(l => l.length > 1);
   
-  // Helper to identify duration strings
   const isDuration = (str: string) => {
     return /(?:\d{4}|present|current|now|today|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(str) &&
            (/\d{4}/.test(str) || /present|current|now/i.test(str));
   };
   
-  // Helper to identify location strings
   const isLocation = (str: string) => {
     return str.includes(',') || 
            /(?:remote|hybrid|on-site|onsite|area|city|state|country)/i.test(str);
   };
   
-  // Helper to identify if line is likely a job title
   const isJobTitle = (str: string) => {
     return str.length > 5 && 
            str.length < 120 && 
@@ -497,7 +448,6 @@ function extractExperience(text: string): Array<{
            !str.match(/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i);
   };
   
-  // Helper to identify bullet points
   const isBulletPoint = (str: string) => {
     return (str.match(/^[-•*·◦▪]/) || 
             str.length > 20) &&
@@ -522,16 +472,13 @@ function extractExperience(text: string): Array<{
       let foundDuration = false;
       let foundLocation = false;
       
-      // Parse the next few lines to extract company, duration, location
       while (j < lines.length && j < i + 15) {
         const currentLine = lines[j];
         
-        // Stop if we hit another job title
         if (j > i + 1 && isJobTitle(currentLine) && !isBulletPoint(currentLine)) {
           break;
         }
         
-        // Try to identify what this line is
         if (!foundOrg && !isDuration(currentLine) && !isBulletPoint(currentLine) && currentLine.length > 2 && currentLine.length < 100) {
           organization = currentLine;
           foundOrg = true;
@@ -542,7 +489,6 @@ function extractExperience(text: string): Array<{
           location = currentLine;
           foundLocation = true;
         } else if (isBulletPoint(currentLine)) {
-          // Clean up bullet points
           let point = currentLine
             .replace(/^[-•*·◦▪]\s*/, '')
             .trim();
@@ -555,7 +501,6 @@ function extractExperience(text: string): Array<{
         j++;
       }
       
-      // Add experience if we have at least role and organization
       if (role && organization && organization.length > 2) {
         experiences.push({
           role: role.trim(),
@@ -584,7 +529,6 @@ function extractExperience(text: string): Array<{
   return experiences.length > 0 ? experiences : [{ role: '', organization: '', location: '', duration: '', points: [''] }];
 }
 
-// Parse education section
 function extractEducation(text: string): Array<{
   institute: string;
   degree: string;
@@ -598,7 +542,6 @@ function extractEducation(text: string): Array<{
     score: string;
   }> = [];
 
-  // Multiple patterns for education section
   const eduPatterns = [
     /(?:Education|Academic Background|Academic Qualifications)\s+([\s\S]*?)(?=\n\s*(?:Experience|Skills|Projects|Certifications|Languages|Licenses|Volunteer|$))/i,
   ];
@@ -621,19 +564,16 @@ function extractEducation(text: string): Array<{
   
   const lines = eduSection.split('\n').map(l => l.trim()).filter(l => l.length > 2);
 
-  // Helper to identify degree patterns
   const isDegree = (str: string) => {
     return /(?:bachelor|master|phd|doctorate|associate|diploma|certificate|b\.?s\.?|m\.?s\.?|b\.?a\.?|m\.?a\.?|m\.?b\.?a\.?|b\.?tech|m\.?tech)/i.test(str) ||
            str.includes('degree') ||
            str.includes('in ');
   };
   
-  // Helper to identify duration
   const isDuration = (str: string) => {
     return /\d{4}/.test(str) && (str.includes('-') || str.includes('–') || /(?:present|current|expected)/i.test(str));
   };
   
-  // Helper to identify GPA/score
   const isScore = (str: string) => {
     return /(?:gpa|grade|cgpa|percentage|score|marks?)[\s:]*\d/i.test(str) ||
            /\d\.\d{1,2}(?:\s*\/\s*\d\.\d)?/.test(str);
@@ -643,7 +583,6 @@ function extractEducation(text: string): Array<{
   while (i < lines.length && education.length < 5) {
     const line = lines[i];
     
-    // Look for institution name (usually first line, not a degree or duration)
     if (
       line.length > 3 &&
       line.length < 150 &&
@@ -658,12 +597,10 @@ function extractEducation(text: string): Array<{
       let score = '';
       let activities = '';
       
-      // Parse next few lines
       let j = i + 1;
       while (j < lines.length && j < i + 10) {
         const currentLine = lines[j];
         
-        // Stop if we hit another institution
         if (
           j > i + 1 &&
           currentLine.length > 20 &&
@@ -689,7 +626,6 @@ function extractEducation(text: string): Array<{
         j++;
       }
       
-      // Add education entry
       if (institute && institute.length > 3) {
         education.push({
           institute: institute.trim(),
@@ -716,7 +652,6 @@ function extractEducation(text: string): Array<{
   return education.length > 0 ? education : [{ institute: '', degree: '', duration: '', score: '' }];
 }
 
-// Parse skills section
 function extractSkills(text: string): Array<{ category: string; items: string }> {
   const skillsPatterns = [
     /(?:Skills|Technical Skills|Core Competencies|Expertise)\s+([\s\S]*?)(?=\n\s*(?:Experience|Education|Projects|Certifications|Languages|Volunteer|Licenses|Interests|$))/i,
@@ -749,7 +684,6 @@ function extractSkills(text: string): Array<{ category: string; items: string }>
   let currentCategory = 'Skills';
   
   for (const line of lines) {
-    // Skip common noise
     if (
       /endorsement/i.test(line) ||
       /skill assessment/i.test(line) ||
@@ -759,7 +693,6 @@ function extractSkills(text: string): Array<{ category: string; items: string }>
       continue;
     }
     
-    // Check if this is a category header
     if (
       line.length < 50 &&
       (line.includes(':') ||
@@ -771,8 +704,6 @@ function extractSkills(text: string): Array<{ category: string; items: string }>
         skillCategories.set(currentCategory, []);
       }
     } else {
-      // Extract individual skills
-      // Skills might be separated by various delimiters
       const delimiters = [
         ',',
         '•',
@@ -783,7 +714,6 @@ function extractSkills(text: string): Array<{ category: string; items: string }>
       
       let skills: string[] = [line];
       
-      // Try to split by delimiters
       for (const delimiter of delimiters) {
         if (line.includes(delimiter)) {
           skills = line.split(delimiter).map(s => s.trim()).filter(s => s.length > 0);
@@ -791,9 +721,7 @@ function extractSkills(text: string): Array<{ category: string; items: string }>
         }
       }
       
-      // Add skills to current category and all skills
       for (let skill of skills) {
-        // Remove endorsement numbers and brackets
         skill = skill
           .replace(/\(\d+\)/g, '')
           .replace(/\[\d+\]/g, '')
@@ -802,7 +730,6 @@ function extractSkills(text: string): Array<{ category: string; items: string }>
           .replace(/^[-•*·◦▪]\s*/, '')
           .trim();
         
-        // Validate skill
         if (
           skill.length >= 2 &&
           skill.length <= 80 &&
@@ -819,10 +746,8 @@ function extractSkills(text: string): Array<{ category: string; items: string }>
     }
   }
   
-  // Build result
   const result: Array<{ category: string; items: string }> = [];
   
-  // If we found categories, use them
   if (skillCategories.size > 1 || (skillCategories.size === 1 && !skillCategories.has('Skills'))) {
     for (const [category, skills] of skillCategories.entries()) {
       if (skills.length > 0) {
@@ -834,7 +759,6 @@ function extractSkills(text: string): Array<{ category: string; items: string }>
     }
   }
   
-  // If no categorized skills or only general category, return all skills
   if (result.length === 0 && allSkills.length > 0) {
     result.push({
       category: 'Skills',
@@ -877,11 +801,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Extract text from PDF
     console.log('\n========================================');
     console.log('STARTING LINKEDIN PDF PARSING');
     console.log('========================================');
@@ -898,7 +820,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse all sections with enhanced extraction
     console.log('\n--- Parsing Contact Information ---');
     const name = extractName(text);
     const email = extractEmail(text);
