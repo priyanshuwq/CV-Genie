@@ -29,11 +29,14 @@ const FooterThird = ({
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-6 sm:space-y-0">
           {/* Logo */}
-          <div className="text-xl font-bold">
-            <Link href="/" className="text-gray-900 hover:text-gray-600">
-              {brandName}
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center">
+              <img 
+                src="/cvGenie-logo.png" 
+                alt="CVGenie Logo" 
+                className="h-8 w-auto object-contain" 
+              />
             </Link>
-            
           </div>
           {/* Navigation Links */}
           <div className="flex flex-wrap justify-center space-x-6 text-md">

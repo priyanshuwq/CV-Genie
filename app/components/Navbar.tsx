@@ -29,7 +29,7 @@ export default function Navbar() {
     }
 
     // User is signed in
-    if (pathname === "/download") {
+    if (pathname === "/create-resume") {
       // Already on create-resume page - try direct download
       if (typeof window !== "undefined" && window.downloadResume) {
         setIsDownloading(true)
@@ -48,7 +48,7 @@ export default function Navbar() {
     } else {
       // Not on create-resume page - navigate there with download flag
       localStorage.setItem("shouldDownload", "true")
-      router.push("/download")
+      router.push("/create-resume")
     }
   }
 

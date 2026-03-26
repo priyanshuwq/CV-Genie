@@ -5,18 +5,21 @@ import { useState, useRef, useEffect } from "react";
 import jsPDF from "jspdf";
 import { saveToLocalStorage } from "../utils/localStorageHelper";
 
-// Left and Right components
+// Left components
 import PersonalInfo from "../components/ui/leftSide/PersonalInfo.create-resume";
-import PersonalInfoRight from "../components/ui/rightSide/PersonalInfo.Right";
-import SkillRight from "../components/ui/rightSide/SkillRight";
 import SkillLeft from "../components/ui/leftSide/Skills.left";
 import EducationLeft from "../components/ui/leftSide/Education.Left";
-import EducationRight from "../components/ui/rightSide/EducationRight";
 import ExperienceLeft from "../components/ui/leftSide/Experience.left";
-import ExperienceRight from "../components/ui/rightSide/Experience.Right";
 import ProjectsLeft from "../components/ui/leftSide/Project.Left";
-import ProjectsRight from "../components/ui/rightSide/Project.Right";
 import AcheivementLeft from "../components/ui/leftSide/Acheivements.Left";
+import LinkedInUpload from "../components/ui/leftSide/LinkedInUpload";
+
+// Right components
+import PersonalInfoRight from "../components/ui/rightSide/PersonalInfo.Right";
+import SkillRight from "../components/ui/rightSide/SkillRight";
+import EducationRight from "../components/ui/rightSide/EducationRight";
+import ExperienceRight from "../components/ui/rightSide/Experience.Right";
+import ProjectsRight from "../components/ui/rightSide/Project.Right";
 import AchievementsRight from "../components/ui/rightSide/Acheivements.Right";
 
 export default function CreateResume() {
@@ -34,17 +37,6 @@ const loading = status === "loading";
   const [achievement, setAchievement] = useState([{ items: '' }]);
 
   const resumeRef = useRef(null);
-
-  useEffect(() => {
-    saveToLocalStorage("resumeData", {
-      info,
-      skills,
-      education,
-      experience,
-      projects,
-      achievement,
-    });
-  }, [info, skills, education, experience, projects, achievement]);
 
   const handleDownloadPDF = async () => {
     if (!resumeRef.current) return;
@@ -66,10 +58,54 @@ const loading = status === "loading";
     });
   };
 
+  useEffect(() => {
+    saveToLocalStorage("resumeData", {
+      info,
+      skills,
+      education,
+      experience,
+      projects,
+      achievement,
+    });
+  }, [info, skills, education, experience, projects, achievement]);
+
+  // Expose download function to window for Navbar access
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.downloadResume = handleDownloadPDF;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.downloadResume;
+      }
+    };
+  }, []);
+
+  // Handler for LinkedIn data import
+  const handleLinkedInDataParsed = (parsedData: any) => {
+    if (parsedData.info) {
+      setInfo(parsedData.info);
+    }
+    if (parsedData.skills && parsedData.skills.length > 0) {
+      setSkills(parsedData.skills);
+    }
+    if (parsedData.education && parsedData.education.length > 0) {
+      setEducation(parsedData.education);
+    }
+    if (parsedData.experience && parsedData.experience.length > 0) {
+      setExperience(parsedData.experience);
+    }
+    if (parsedData.projects && parsedData.projects.length > 0) {
+      setProjects(parsedData.projects);
+    }
+  };
+
+ const bypassAuth = false; 
+
  return (
   <div className="relative w-screen h-screen overflow-y-auto">
     {/* Blur Overlay when not signed in */}
-    {(!session && !loading) && (
+    {(!bypassAuth && !session && !loading) && (
      <div className="absolute z-50 inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
   <div className="w-[90%] max-w-md rounded-xl bg-white/20 backdrop-filter backdrop-blur-lg border border-white/30 p-8 shadow-2xl text-center">
     <h2 className="text-2xl font-semibold text-black/80 drop-shadow mb-4"
@@ -93,7 +129,7 @@ const loading = status === "loading";
     {/* Actual Background & Content */}
     <div
       className={`absolute inset-0 bg-cover bg-center transition-all duration-300 ${
-        !session && !loading ? 'opacity-40 blur-sm' : 'opacity-100'
+        !bypassAuth && !session && !loading ? 'opacity-40 blur-sm' : 'opacity-100'
       }`}
       style={{ backgroundImage: "url('create-resume.png')" }}
     />
@@ -101,6 +137,7 @@ const loading = status === "loading";
     <div className="relative z-10 flex flex-col md:flex-row w-full gap-3 p-3 pt-6 mt-13 md:mt-20">
       {/* Left Panel - Input */}
       <div className="w-full md:w-1/2 max-h-[83vh] overflow-y-auto p-4 border border-gray-400 shadow rounded-lg bg-white/90 scrollbar-hide">
+        <LinkedInUpload onDataParsed={handleLinkedInDataParsed} />
         <PersonalInfo info={info} setInfo={setInfo} />
         <SkillLeft skills={skills} setSkills={setSkills} />
         <EducationLeft education={education} setEducation={setEducation} />
@@ -115,13 +152,6 @@ const loading = status === "loading";
           ref={resumeRef}
           id="right-resume-preview"
           className="min-h-full"
-          style={{
-            fontFamily: 'Arial, sans-serif',
-            fontSize: '14px',
-            lineHeight: '1.4',
-            color: '#000000',
-            padding: "30px 17px",
-          }}
           data-html2canvas-ignore="false"
         >
           <PersonalInfoRight info={info} />

@@ -87,7 +87,10 @@ export default function FAQ() {
         </div>
         {/* Get Help Button */}
 <div className="mt-10 flex justify-center">
-  <button className="flex animated-hover-btn items-center gap-1 text-black/80 px-6 py-2 rounded-sm shadow-md hover:shadow-xl transition-all duration-300 font-semibold text-lg hover:scale-105 bg-white/70 backdrop-blur-md bubbles-effect relative title-font">
+  <button 
+    onClick={() => window.open('https://github.com/komalverma22/cv-Genie/issues', '_blank')}
+    className="flex animated-hover-btn items-center gap-1 text-black/80 px-6 py-2 rounded-sm shadow-md hover:shadow-xl transition-all duration-300 font-semibold text-lg hover:scale-105 bg-white/70 backdrop-blur-md bubbles-effect relative title-font cursor-pointer"
+  >
     <img
       src="/problem-solving.png"
       alt="Problem Solving"
